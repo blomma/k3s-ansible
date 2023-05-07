@@ -1,6 +1,6 @@
 ---
 - name: Disable services
-  systemd:
+  ansible.builtin.systemd:
     name: "{{ item }}"
     state: stopped
     enabled: no
@@ -11,12 +11,12 @@
 
 - name: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim-runc"
   register: pkill_containerd_shim_runc
-  command: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim-runc"
+  ansible.builtin.command: pkill -9 -f "k3s/data/[^/]+/bin/containerd-shim-runc"
   changed_when: "pkill_containerd_shim_runc.rc == 0"
   failed_when: false
 
 - name: Umount k3s filesystems
-  include_tasks: umount_with_children.yml
+  ansible.builtin.include_tasks: umount_with_children.yml
   with_items:
     - /run/k3s
     - /var/lib/kubelet
@@ -26,12 +26,12 @@
     loop_var: mounted_fs
 
 - name: Remove useless netns
-  shell: "for ns in $( cd /run/netns; ls -1 cni*); do sudo ip netns del $ns; done"
+  ansible.builtin.shell: "for ns in $( cd /run/netns; ls -1 cni*); do sudo ip netns del $ns; done"
   register: shellcmd
   tags: removenetns
 
 - name: Remove service files, binaries and data
-  file:
+  ansible.builtin.file:
     name: "{{ item }}"
     state: absent
   with_items:
@@ -43,5 +43,5 @@
     - /var/lib/rancher/k3s
 
 - name: daemon_reload
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: yes
